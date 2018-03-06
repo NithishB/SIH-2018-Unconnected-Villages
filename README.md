@@ -31,3 +31,6 @@ takes the road shapes, the dictionary created in findDistances() and road record
 
 #### **plotClosestn(road-shapes, village-minimums, village-points)** : -
 takes the road shapes, village points and closest n roads indices found from findClosestn() and plots them
+
+#### **plotIntersections()** : - 
+finds the intersections of roads and plots them on the map
