@@ -27,6 +27,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
+no_of_goals=3
 
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
 brain = Dqn(7,7,0.9)
@@ -39,7 +40,8 @@ first_update = True
 def init():
     global sand
     global goals
-    goals = [(40,260),(300,300),(500,500)]
+    goals = {0:[(40,260),1],1:[(300,300),1],2:[(500,500),1]}
+    
     global goal_x
     global goal_y
     global first_update
@@ -50,7 +52,7 @@ def init():
     first_update = False
 
 # Initializing the last distance
-last_distance = 0
+last_distance = [0]*no_of_goals
 
 # Creating the car class
 
@@ -181,7 +183,9 @@ class Game(Widget):
         scores.append(brain.score())
         rotation = action2rotation[action]
         self.car.move(rotation)
-        distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
+	distance=[]
+	for key,val in goals.iteritems():		
+        	distance.append(np.sqrt((self.car.x - val[0][0])**2 + (self.car.y - val[0][1])**2))
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
@@ -192,19 +196,19 @@ class Game(Widget):
 
         if  sand[int(self.car.x),int(self.car.y)] > 0:
             self.car.velocity = Vector(4, 0).rotate(self.car.angle)
-	    for x,y in goals:
-		if(self.car.x==x and self.car.y==y):
-			last_reward=1
+	    for key,val in goals.iteritems():
+		if(self.car.x==val[0][0] and self.car.y==val[0][1]):
+			last_reward=val[1]
 		else:
-            		last_reward = 0
+		    last_reward = 0
+		    if distance[key] < last_distance[key]:
+                	last_reward += (((last_distance[key]-distance[key])*10)/last_distance[key])*goals[key][1]
 	#elif sand[int(self.car.x),int(self.car.y)] <=1.0 and sand[int(self.car.x),int(self.car.y)] >0.8:
             #self.car.velocity = Vector(3, 0).rotate(self.car.angle)
             #last_reward = +1
         else: # otherwise
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
             last_reward = -0.5
-            #if distance < last_distance:
-                #last_reward = 0.1
 
         if self.car.x < 10:
             self.car.x = 10
@@ -221,8 +225,8 @@ class Game(Widget):
 
         '''if distance < 30:
             goal_x = self.width-goal_x
-            goal_y = self.height-goal_y
-        last_distance = distance'''
+            goal_y = self.height-goal_y'''
+        last_distance = distance
 
 # Adding the painting tools
 
@@ -280,8 +284,10 @@ class MyPaintWidget(Widget):
 		sand[int(y) - width : int(y) + width, int(x) - width : int(x) + width] = 1
             Color(1.0,1.0,1.0)
   	    d = 10.
-            for x,y in goals:
-  		Ellipse(pos=(x - d / 2, y - d / 2), size=(d, d))
+            for key,val in goals.iteritems():
+  		x = val[0][0]
+		y = val[0][1]
+		Ellipse(pos=(x - d / 2, y - d / 2), size=(d, d))
                 sand[int(x),int(y)] = 1
  		sand[int(x) - 10 : int(x) + 10, int(y) - 10 : int(y) + 10] = 1
 	    Color(0.8,0.7,0)	

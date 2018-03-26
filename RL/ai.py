@@ -11,6 +11,7 @@ import torch.optim as optim
 import torch.autograd as autograd# convert tensor to tensor+gradient-Pytorch terms
 from torch.autograd import Variable# convert tensor to tensor+gradient-Pytorch terms
 
+probs=[]
 
 # Creating the architecture of the Neural Network
 
@@ -56,13 +57,14 @@ class Dqn():
         self.reward_window = []#for evaluating AI performance-graph
         self.model = Network(input_size, nb_action)
         self.memory = ReplayMemory(100000)
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.001)#models parameters and learning rate
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.005)#models parameters and learning rate
         self.last_state = torch.Tensor(input_size).unsqueeze(0)
         self.last_action = 0
         self.last_reward = 0
     
     def select_action(self, state):
-        probs = F.softmax(self.model(Variable(state, volatile = True))*10000) # T=100
+	global probs     
+	probs = F.softmax(self.model(Variable(state, volatile = True))*10000) # T=100
         action = probs.multinomial()
         return action.data[0,0]
     
@@ -94,6 +96,8 @@ class Dqn():
         return sum(self.reward_window)/(len(self.reward_window)+1.)
     
     def save(self):
+	global probs
+	print("probability : ", probs.data)
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer' : self.optimizer.state_dict(),
                    }, 'last_brain.pth')
